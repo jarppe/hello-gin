@@ -1,0 +1,27 @@
+FROM golang:1.15-buster
+
+RUN apt update -qq                            && \
+    apt upgrade -qqy                          && \
+    apt install -qqy tini
+
+RUN go get github.com/silenceper/gowatch      && \
+    ln -s /go/bin/gowatch /bin
+
+COPY ./src/go.mod  /app/src/
+COPY ./src/go.sum  /app/src/
+
+RUN cd /app/src                               && \
+    go mod download
+
+COPY ./src             /app/src
+COPY ./assets          /app/assets
+COPY ./templates       /app/templates
+
+ENV HOST=0.0.0.0
+ENV PORT=8080
+ENV GIN_MODE=debug
+ENV RESOURCES=/app
+
+WORKDIR /app/src
+ENTRYPOINT ["tini", "--"]
+CMD ["gowatch"]

@@ -25,8 +25,8 @@ RUN CGO_ENABLED=0    \
 FROM gcr.io/distroless/static-debian10 AS dist
 
 COPY --from=build /server /server
-#COPY ./src/assets     ./assets
-#COPY ./src/templates  ./templates
+COPY ./assets     ./assets
+COPY ./templates  ./templates
 
 ENV HOST=0.0.0.0
 ENV PORT=8080

@@ -1,0 +1,24 @@
+---
+version: "3.8"
+
+
+services:
+
+  server:
+    image: hello-gin-server:dev
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    networks:
+      - dev
+    ports:
+      - 8080:8080
+    volumes:
+      - ./src:/app/src:cached
+      - ./assets:/app/assets:cached
+      - ./templates:/app/templates:cached
+    restart: on-failure
+
+networks:
+  dev:
+    name: hello-gin

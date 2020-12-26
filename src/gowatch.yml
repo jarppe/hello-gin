@@ -1,0 +1,8 @@
+appname: server
+watch_paths:
+  - ../assets
+  - ../templates
+watch_exts:
+  - .html
+  - .css
+  - .js

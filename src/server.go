@@ -2,14 +2,33 @@ package main
 
 import (
 	"context"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/jarppe/hello-gin/assets"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 )
+
+var (
+	host, port, resources string
+)
+
+func init() {
+	if host = os.Getenv("HOST"); host == "" {
+		host = "0.0.0.0"
+	}
+	if port = os.Getenv("PORT"); port == "" {
+		port = "8080"
+	}
+	if resources = os.Getenv("RESOURCES"); resources == "" {
+		resources = "."
+	}
+}
 
 type Server struct {
 	Router *gin.Engine
@@ -20,16 +39,6 @@ func NewServer() *Server {
 	router := gin.New()
 
 	router.Use(gin.Logger(), gin.Recovery())
-
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "0.0.0.0"
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 
 	server := &http.Server{
 		Addr:    host + ":" + port,
@@ -66,7 +75,7 @@ func (server *Server) Routes() {
 }
 
 func (server *Server) HealthRoutes() {
-	r := server.Router.Group("/health")
+	r := server.Router
 	r.GET("/livez", server.Live())
 	r.GET("/readyz", server.Ready())
 }
@@ -114,13 +123,15 @@ func (server *Server) Hello() gin.HandlerFunc {
 
 func (server *Server) AppRoutes() {
 	r := server.Router
-	r.Static("/assets", "./assets")
-	r.LoadHTMLGlob("templates/**/*.html")
-	r.GET("/", func (c *gin.Context) {
+
+	r.LoadHTMLGlob(path.Join(resources, "templates/**/*.html"))
+	r.GET("/", gzip.Gzip(1), func (c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Title": "HelloGIN",
 		})
 	})
+
+	r.GET("/assets/*asset", assets.NewAssetsHandler(path.Join(resources, "assets")))
 }
 
 func (server *Server) WaitSignal() {
